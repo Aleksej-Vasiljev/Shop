@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<h1>📝 Оформление заказа</h1>
+
+{% if products %}
+<div class="row">
+    <!-- Левая колонка: список товаров -->
+    <div class="col-md-6">
+        <h3>Ваши товары:</h3>
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.price }} руб.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="fw-bold">Итого: {{ total }} руб.</p>
+        <a href="{% url 'cart_view' %}" class="btn btn-outline-primary">Вернуться в корзину</a>
+    </div>
+
+    <!-- Правая колонка: форма -->
+    <div class="col-md-6">
+        <h3>Контактные данные</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success mt-2">Отправить заказ ✅</button>
+        </form>
+    </div>
+</div>
+
+{% else %}
+<p>Корзина пуста. <a href="{% url 'products' %}">Вернуться к покупкам</a></p>
+{% endif %}
+
+{% endblock %}

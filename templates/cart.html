@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<h1>🛒 Ваша корзина</h1>
+
+{% if products %}
+<table class="table table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Товар</th>
+            <th>Цена</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.price }} руб.</td>
+                <td>
+                    <form method="post" action="{% url 'remove_from_cart' product.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="fw-bold">Итого: {{ total }} руб.</p>
+<a href="{% url 'products' %}" class="btn btn-outline-primary">Продолжить покупки</a>
+
+{% if user.is_authenticated %}
+    <a href="{% url 'order_request' %}" class="btn btn-success ms-2">Подтвердить покупку ✅</a>
+{% else %}
+<p class="mt-3 text-danger">Чтобы оформить заказ, пожалуйста, <a href="{% url 'login' %}">войдите
+</a> или <a href="{% url 'register' %}">Зарегистрируйтесь</a>.</p>
+{% endif %}
+
+{% else %}
+<p>Корзина пуста.</p>
+{% endif %}
+{% endblock %}
