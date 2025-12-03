@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% load static %}
 
@@ -32,6 +31,11 @@
                     <h5 class="card-title">{{ product.name }}</h5>
                     <p class="card-text">{{ product.description|truncatewords:15 }}</p>
                     <p class="text-muted">{{ product.price }} руб.</p>
+                    {% if product.price_usd %}
+                        <p class="text-muted">~ ${{ product.price_usd }}</p>
+                    {% else %}
+                        <p class="text-muted">Цена в USD недоступна</p>
+                    {% endif %}
                     {% if product.in_stock %}
                         <span class="badge bg-success">В наличии</span>
                     {% else %}

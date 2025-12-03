@@ -7,6 +7,7 @@ from django.core.cache import cache
 
 from .forms import RegisterForm, OrderRequestForm
 from .models import Product, Category
+from decimal import Decimal
 
 
 # ---------------- Регистрация пользователя ----------------
@@ -25,25 +26,37 @@ def register_view(request):
 
 
 # ---------------- Список товаров ----------------
-def products_view(request):
-    categories = Category.objects.all()
-    category_id = request.GET.get('category')
-    products = Product.objects.all()
-    if category_id:
-        products = products.filter(category_id=category_id)
-
-    return render(request, 'products.html', {
-        'products': products,
-        'categories': categories,
-        'selected_category': category_id
-    })
-
+# def products_view(request):
+#     categories = Category.objects.all()
+#     category_id = request.GET.get('category')
+#     products = Product.objects.all()
+#     if category_id:
+#         products = products.filter(category_id=category_id)
+#
+#     usd_rate = cache.get('usd_rate')
+#     for p in products:
+#        p.price_usd = round(p.price / usd_rate, 2) if usd_rate else None
+#
+#     return render(request, 'products.html', {
+#         'products': products,
+#         'categories': categories,
+#         'selected_category': category_id
+#     })
+#
 
 # ---------------- Детали товара ----------------
 @login_required(login_url='/login/')
+
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    return render(request, 'product_detail.html', {'product': product})
+    usd_rate = cache.get('usd_rate')
+
+    price_usd = round(product.price / usd_rate, 2) if usd_rate else None
+
+    return render(request, 'product_detail.html', {
+        'product': product,
+        'price_usd': price_usd
+    })
 
 
 # ---------------- КОРЗИНА ----------------
@@ -123,19 +136,50 @@ def send_telegram_message(msg):
 
 
 # ---------------- Кэш списка товаров ----------------
-def products_view(request):
-    products = cache.get('products_list')
+# def products_view(request):
+#     products = cache.get('products_list')
+#
+#     if not products:
+#         print("КЭШ ПУСТ — грузим из БД")  # можно удалить
+#         products = list(Product.objects.all())
+#         cache.set('products_list', products, 60 * 60)  # кэш на 1 час
+#
+#     categories = Category.objects.all()
+#     category_id = request.GET.get('category')
+#
+#     if category_id:
+#         products = [p for p in products if str(p.category_id) == category_id]
+#
+#     return render(request, 'products.html', {
+#         'products': products,
+#         'categories': categories,
+#         'selected_category': category_id
+#     })
 
-    if not products:
-        print("КЭШ ПУСТ — грузим из БД")  # можно удалить
+def products_view(request):
+    # --- Получаем продукты из кэша или из БД
+    products = cache.get('products_list')
+    if products is None:
         products = list(Product.objects.all())
         cache.set('products_list', products, 60 * 60)  # кэш на 1 час
 
+    # --- Фильтр по категориям
     categories = Category.objects.all()
     category_id = request.GET.get('category')
-
     if category_id:
         products = [p for p in products if str(p.category_id) == category_id]
+
+    # --- Получаем курс USD из кэша и приводим к Decimal
+    usd_rate = cache.get('usd_rate')
+    if usd_rate is not None:
+        usd_rate = Decimal(str(usd_rate))
+
+    # --- Добавляем динамическое поле price_usd
+    for p in products:
+        if usd_rate:
+            p.price_usd = round(p.price / usd_rate, 2)
+        else:
+            p.price_usd = None
 
     return render(request, 'products.html', {
         'products': products,

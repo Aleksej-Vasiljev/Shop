@@ -16,6 +16,11 @@
         <h2>{{ product.name }}</h2>
         <p>{{ product.description }}</p>
         <p><strong>Цена:</strong> {{ product.price }} руб.</p>
+        {% if price_usd %}
+            <p><strong>Цена в USD:</strong> ${{ price_usd }}</p>
+        {% else %}
+            <p><strong>Цена в USD:</strong> <span class="text-muted">Курс недоступен</span></p>
+        {% endif %}
         {% if product.in_stock %}
             <p><span class="badge bg-success">В наличии</span></p>
         {% else %}
